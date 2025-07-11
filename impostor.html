@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>whos the fooking IMPOSTOR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .perspective {
+      perspective: 1000px;
+    }
+    .card-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      backface-visibility: hidden;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .card-back {
+      background-color: #374151; 
+    }
+    .card-front {
+      background-color: #792020; 
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4">
+
+  <div id="setup" class="w-full max-w-sm text-center space-y-4">
+    <h2 class="text-2xl font-semibold">ILE OSÓB BIERZE UDZIAŁ</h2>
+    <input type="number" id="playerCount" min="3" max="20" class="w-full px-4 py-2 text-black rounded-md" />
+    <button onclick="startGame()" class="bg-red-800 hover:bg-red-700 text-white px-4 py-2 rounded w-full">ZACZYNAJMY!</button>
+  </div>
+
+  <div id="card-container" class="hidden flex flex-col items-center space-y-4 w-full max-w-sm">
+    <h2 id="player-label" class="text-xl font-semibold">Gracz 1</h2>
+
+    <div class="relative w-48 h-72 perspective">
+      <div id="card" class="card w-full h-full">
+        <div class="card-inner">
+          <div class="card-face card-back">Jakie mamy słowo?</div>
+          <div class="card-face card-front" id="card-word">SŁOWO</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-2 flex-wrap justify-center">
+      <button id="check-btn" onclick="checkCard()" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">SPRAWDŹ SIĘ!</button>
+      <button id="next-btn" onclick="nextCard()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">NASTĘPNY!</button>
+      <button id="new-game-btn" onclick="resetGame()" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded hidden">NOWA GRA</button>
+    </div>
+  </div>
+
+  <script>
+    const randomWords = [
+
+    "Kot", "Pies", "Lew", "Tygrys", "Słoń", "Żyrafa", "Papuga", "Delfin", "Wieloryb", "Pszczoła",
+    
+    // Jedzenie
+    "Pizza", "Zupa", "Chleb", "Ser", "Jabłko", "Gruszka", "Pomidor", "Ogórek", "Lody", "Makaron",
+    
+    // Przedmioty
+    "Telefon", "Komputer", "Krzesło", "Stół", "Drzwi", "Łóżko", "Zegar", "Książka", "Kubek", "Okno",
+    
+    // Miejsca
+    "Szkoła", "Dom", "Sklep", "Kościół", "Szpital", "Lotnisko", "Plaża", "Las", "Park", "Restauracja",
+
+    // Zawody
+    "Lekarz", "Nauczyciel", "Policjant", "Piekarz", "Strażak", "Prawnik", "Mechanik", "Kierowca", "Programista", "Sprzedawca",
+
+    // Pojazdy
+    "Samochód", "Rower", "Motocykl", "Autobus", "Ciężarówka", "Tramwaj", "Pociąg", "Samolot", "Łódź", "Helikopter",
+
+    // Ubrania
+    "Koszula", "Spodnie", "Buty", "Czapka", "Kurtka", "Skarpety", "Rękawiczki", "Sukienka", "Sweter", "Szalik",
+
+    // Ciało
+    "Głowa", "Ręka", "Noga", "Palec", "Oko", "Nos", "Ucho", "Włosy", "Brzuch", "Plecy",
+
+    // Natura
+    "Drzewo", "Kwiat", "Kamień", "Rzeka", "Góra", "Słońce", "Księżyc", "Wiatr", "Deszcz", "Lód"
+    ];
+
+    let totalPlayers = 0;
+    let currentPlayer = 1;
+    let roles = [];
+
+    function startGame() {
+      const input = document.getElementById('playerCount');
+      totalPlayers = parseInt(input.value);
+      if (!totalPlayers || totalPlayers < 3) {
+        alert("Minimalnie 3 graczy");
+        return;
+      }
+
+      const word = randomWords[Math.floor(Math.random() * randomWords.length)];
+      roles = Array(totalPlayers).fill(word);
+      const impostorIndex = Math.floor(Math.random() * totalPlayers);
+      roles[impostorIndex] = "IMPOSTOR";
+
+      currentPlayer = 1;
+      document.getElementById('setup').classList.add("hidden");
+      document.getElementById('card-container').classList.remove("hidden");
+      updateCardView();
+    }
+
+    function updateCardView() {
+      document.getElementById('player-label').textContent = `Gracz ${currentPlayer}`;
+      document.getElementById('card').classList.remove("flipped");
+      document.getElementById('card-word').textContent = '';
+      document.getElementById('check-btn').classList.remove("hidden");
+      document.getElementById('next-btn').classList.remove("hidden");
+
+      if (currentPlayer === totalPlayers) {
+        document.getElementById('next-btn').classList.add("hidden");
+        document.getElementById('new-game-btn').classList.remove("hidden");
+      } else {
+        document.getElementById('new-game-btn').classList.add("hidden");
+      }
+    }
+
+    function checkCard() {
+      document.getElementById('card').classList.add("flipped");
+      document.getElementById('card-word').textContent = roles[currentPlayer - 1];
+    }
+
+    function nextCard() {
+      if (currentPlayer < totalPlayers) {
+        currentPlayer++;
+        updateCardView();
+      }
+    }
+
+    function resetGame() {
+      document.getElementById('card-container').classList.add("hidden");
+      document.getElementById('setup').classList.remove("hidden");
+      document.getElementById('playerCount').value = '';
+    }
+  </script>
+</body>
+</html>
